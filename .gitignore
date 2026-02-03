@@ -30,3 +30,27 @@
 
 # Debug files
 *.dSYM/
+
+# IDE files
+.vscode/
+.idea/
+.cursor/
+.cursorrules
+.cursorignore
+.cursorignorerules
+.cursorignorerulesrules
+.cursorignorerulesrulesrules
+.cursorignorerulesrulesrulesrules
+.cursorignorerulesrulesrulesrulesrules
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+ehthumbs.db
+Icon?
+ehthumbs.db
+Icon?
+ehthumbs.db
+Icon?
