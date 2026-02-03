@@ -1,7 +1,42 @@
 # rbndr
 Simple DNS Rebinding Service
 
-rbndr is a very simple, non-conforming, name server for testing software against DNS rebinding vulnerabilities. The server responds to queries by randomly selecting one of the addresses specified in the hostname and returning it as the answer with a very low ttl.
+[English](README.md) | [简体中文](README_zh.md)
+
+**Go refactor of [taviso/rbndr](https://github.com/taviso/rbndr).**
+
+rbndr is a very simple, non-conforming, name server for testing software against DNS rebinding vulnerabilities. The server responds to queries by selecting one of the two addresses in the hostname (based on query ID) and returning it with a very low TTL.
+
+## Build and run (Go)
+
+```bash
+go build -o rbndr .
+./rbndr              # listen on UDP 53 (requires root)
+./rbndr -port 5353   # listen on 5353 for testing without root
+go test -v ./...     # run tests
+```
+
+### Self-hosting with a custom domain
+
+You can deploy rbndr on your own server and use **any domain suffix** (not limited to rbndr.us). This matches the community request in [taviso/rbndr#10](https://github.com/taviso/rbndr/issues/10).
+
+```bash
+./rbndr -domain=rebind.example.com -port 53
+```
+
+Then hostnames follow the same format with your domain:
+
+- `<ipv4-hex>.<ipv4-hex>.rebind.example.com`
+
+Example: `7f000001.c0a80001.rebind.example.com` alternates between 127.0.0.1 and 192.168.0.1. You can use subdomains of any length (e.g. `7f000001.c0a80001.rebind.mycompany.co.uk` with `-domain=rebind.mycompany.co.uk`).
+
+1. Point your domain’s NS (or a subdomain like `rebind.example.com`) to this server’s IP.
+2. Run rbndr with `-domain=rebind.example.com` (or your chosen suffix).
+3. Use `host` / `dig` or browsers against `7f000001.c0a80001.rebind.example.com` as usual.
+
+Default `-domain` is `rbndr.us` for compatibility with the public service.
+
+The original C implementation is in `legacy/rebinder.c`.
 
 https://en.wikipedia.org/wiki/DNS_rebinding
 
