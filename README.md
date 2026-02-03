@@ -7,6 +7,8 @@ Simple DNS Rebinding Service
 
 rbndr is a very simple, non-conforming, name server for testing software against DNS rebinding vulnerabilities. The server responds to queries by selecting one of the two addresses in the hostname (based on query ID) and returning it with a very low TTL.
 
+![](./Screenshot.jpg)
+
 ## Build and run (Go)
 
 ```bash
