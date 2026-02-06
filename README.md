@@ -13,9 +13,19 @@ rbndr is a very simple, non-conforming, name server for testing software against
 
 ```bash
 go build -o rbndr .
-./rbndr              # listen on UDP 53 (requires root)
+./rbndr              # listen on UDP 53 (requires root), then interactive prompts
 ./rbndr -port 5353   # listen on 5353 for testing without root
 go test -v ./...     # run tests
+```
+
+**Command-line flags** are only `-domain` (suffix for rebinding; empty = default `rbndr.us`) and `-port` (UDP port). After starting, the program enters **interactive mode** (English): you enter the **Rebinding IP** first, then the **Access IP**; it prints the generated hostname and starts the DNS server.
+
+```bash
+./rbndr -port 5353
+# Rebinding IP: 127.0.0.1
+# Access IP: 192.168.0.1
+# 7f000001.c0a80001.rbndr.us
+# (DNS server then starts)
 ```
 
 ### Self-hosting with a custom domain
@@ -69,12 +79,9 @@ The format for hostnames is simply
 <ipv4 in base-16>.<ipv4 in base-16>.rbndr.us
 ```
 
-But you can use this website to convert from dotted quads if you prefer:
+Run `./rbndr` and enter the two dotted-quad IPs when prompted (Access IP, then Rebinding IP); the program prints the hostname. You can also use the [rebinder.html](https://lock.cmpxchg8b.com/rebinder.html) website to convert from dotted quads.
 
-https://lock.cmpxchg8b.com/rebinder.html
-
-
-For example, to switch between `127.0.0.1` and `192.168.0.1` you would encode them as dwords, and then use:
+For example, to switch between `127.0.0.1` and `192.168.0.1` run `./rbndr`, enter `127.0.0.1` as Rebinding IP and `192.168.0.1` as Access IP, then use the printed hostname:
 
 ```
 7f000001.c0a80001.rbndr.us

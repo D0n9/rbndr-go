@@ -70,6 +70,31 @@ func TestHandleStandardDNS_MatchingLabelsRefused(t *testing.T) {
 	}
 }
 
+func TestRebindHostname(t *testing.T) {
+	tests := []struct {
+		ip1, ip2, domain string
+		want             string
+		wantErr          bool
+	}{
+		{"127.0.0.1", "192.168.0.1", "rbndr.us", "7f000001.c0a80001.rbndr.us", false},
+		{"10.0.0.1", "10.0.0.2", "", "0a000001.0a000002.rbndr.us", false},
+		{"127.0.0.1", "192.168.0.1", "rebind.example.com", "7f000001.c0a80001.rebind.example.com", false},
+		{"0.0.0.0", "255.255.255.255", "rbndr.us", "00000000.ffffffff.rbndr.us", false},
+		{"invalid", "192.168.0.1", "rbndr.us", "", true},
+		{"127.0.0.1", "::1", "rbndr.us", "", true},
+	}
+	for _, tt := range tests {
+		got, err := rebindHostname(tt.ip1, tt.ip2, tt.domain)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("rebindHostname(%q, %q, %q) err=%v wantErr=%v", tt.ip1, tt.ip2, tt.domain, err, tt.wantErr)
+			continue
+		}
+		if !tt.wantErr && got != tt.want {
+			t.Errorf("rebindHostname(%q, %q, %q) = %q want %q", tt.ip1, tt.ip2, tt.domain, got, tt.want)
+		}
+	}
+}
+
 func TestDomainToLabels(t *testing.T) {
 	tests := []struct {
 		domain string

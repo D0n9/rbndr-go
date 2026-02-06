@@ -13,9 +13,19 @@ rbndr 是一个极简的、非标准兼容的权威 DNS 服务，用于检测软
 
 ```bash
 go build -o rbndr .
-./rbndr              # 监听 UDP 53（需 root）
-./rbndr -port 5353   # 监听 5353，无需 root 即可测试
+./rbndr              # 监听 UDP 53（需 root），随后进入交互式输入
+./rbndr -port 5353   # 监听 5353，无需 root
 go test -v ./...     # 运行测试
+```
+
+**命令行参数**仅有两个：`-domain`（域名后缀，为空则使用默认 `rbndr.us`）、`-port`（监听端口）。执行后进入**交互式**（英文提示）：先输入「重绑定 IP」，再输入「访问 IP」，程序输出生成的域名并启动 DNS 服务。
+
+```bash
+./rbndr -port 5353
+# Rebinding IP: 127.0.0.1
+# Access IP: 192.168.0.1
+# 7f000001.c0a80001.rbndr.us
+# （随后 DNS 服务启动）
 ```
 
 ### 自建与自定义域名
@@ -71,11 +81,9 @@ Adobe 在 Flash 中尝试解决该问题的说明见：https://www.adobe.com/dev
 <IPv4 十六进制>.<IPv4 十六进制>.rbndr.us
 ```
 
-也可以用下列网站将点分十进制转为十六进制：
+运行 `./rbndr` 后按提示输入两个点分十进制 IP（先重绑定 IP，再访问 IP），程序会输出主机名。也可用[该网页](https://lock.cmpxchg8b.com/rebinder.html)自行转换。
 
-https://lock.cmpxchg8b.com/rebinder.html
-
-例如，要在 `127.0.0.1` 和 `192.168.0.1` 之间切换，先转成十六进制再拼接：
+例如，要在 `127.0.0.1` 和 `192.168.0.1` 之间切换，运行 `./rbndr`，在 Rebinding IP 输入 `127.0.0.1`、在 Access IP 输入 `192.168.0.1`，然后使用程序输出的主机名：
 
 ```
 7f000001.c0a80001.rbndr.us

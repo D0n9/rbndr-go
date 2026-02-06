@@ -5,12 +5,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/binary"
 	"flag"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -108,6 +110,34 @@ func parseIP4Label(label []byte) ([]byte, bool) {
 	ip4 := make([]byte, 4)
 	binary.BigEndian.PutUint32(ip4, u32)
 	return ip4, true
+}
+
+// ip4ToHexLabel converts an IPv4 address to the 8-char hex label used in rebinding hostnames.
+func ip4ToHexLabel(ip net.IP) (string, bool) {
+	ip4 := ip.To4()
+	if ip4 == nil {
+		return "", false
+	}
+	return fmt.Sprintf("%02x%02x%02x%02x", ip4[0], ip4[1], ip4[2], ip4[3]), true
+}
+
+// rebindHostname generates a rebinding hostname for two IPv4 addresses and the given domain suffix.
+func rebindHostname(ip1Str, ip2Str, domain string) (string, error) {
+	ip1 := net.ParseIP(strings.TrimSpace(ip1Str))
+	ip2 := net.ParseIP(strings.TrimSpace(ip2Str))
+	if ip1 == nil || ip2 == nil {
+		return "", fmt.Errorf("invalid IP address")
+	}
+	hex1, ok1 := ip4ToHexLabel(ip1)
+	hex2, ok2 := ip4ToHexLabel(ip2)
+	if !ok1 || !ok2 {
+		return "", fmt.Errorf("both addresses must be IPv4")
+	}
+	domain = strings.Trim(strings.TrimSpace(domain), ".")
+	if domain == "" {
+		domain = defaultDomain
+	}
+	return hex1 + "." + hex2 + "." + domain, nil
 }
 
 func runServer(conn *net.UDPConn, domainLabels []string) error {
@@ -302,8 +332,30 @@ func (h *header) marshal(full bool) []byte {
 
 func main() {
 	port := flag.Int("port", 53, "UDP port to listen on (53 requires root)")
-	domain := flag.String("domain", defaultDomain, "Allowed domain suffix for rebinding (e.g. rbndr.us or rebind.example.com)")
+	domain := flag.String("domain", defaultDomain, "Domain suffix for rebinding (empty = use default rbndr.us)")
 	flag.Parse()
+	if strings.TrimSpace(*domain) == "" {
+		*domain = defaultDomain
+	}
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Rebinding IP: ")
+	if !scanner.Scan() {
+		log.Fatalf("read input: %v", scanner.Err())
+	}
+	rebindingIP := strings.TrimSpace(scanner.Text())
+	fmt.Print("Access IP: ")
+	if !scanner.Scan() {
+		log.Fatalf("read input: %v", scanner.Err())
+	}
+	accessIP := strings.TrimSpace(scanner.Text())
+	hostname, err := rebindHostname(rebindingIP, accessIP, *domain)
+	if err != nil {
+		log.Fatalf("invalid IP: %v", err)
+	}
+	fmt.Println("Generated hostname: ", hostname)
+	fmt.Println("--------------------------------")
+	log.Println("Starting DNS server...")
+	log.Printf("hostname: %s", hostname)
 	domainLabels := domainToLabels(*domain)
 	if len(domainLabels) == 0 {
 		log.Fatalf("invalid -domain %q", *domain)
